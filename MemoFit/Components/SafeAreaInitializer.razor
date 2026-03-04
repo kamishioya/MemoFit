@@ -1,0 +1,20 @@
+@inject SafeAreaService SafeAreaService
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // ネイティブで取得したステータスバー高さを CSS 変数として注入
+            var height = SafeAreaService.StatusBarHeight;
+            await JS.InvokeVoidAsync(
+                "eval",
+                $"document.documentElement.style.setProperty('--safe-area-top', '{height}px')"
+            );
+        }
+    }
+
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+}

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using MemoFit.Services;
 
 namespace MemoFit
 {
@@ -15,6 +16,8 @@ namespace MemoFit
                 });
 
             builder.Services.AddMauiBlazorWebView();
+            builder.Services.AddSingleton<DatabaseService>();
+            builder.Services.AddSingleton<SafeAreaService>();
 
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();

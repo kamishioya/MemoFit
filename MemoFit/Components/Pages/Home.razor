@@ -1,5 +1,89 @@
 ﻿@page "/"
+@using MemoFit.Models
+@inject MemoFit.Services.DatabaseService Db
 
-<h1>Hello, world!</h1>
+<div class="memo-list-page">
+    <div class="memo-header">
+        <h2>メモ一覧</h2>
+        <button class="btn btn-primary" @onclick="ToggleForm">＋ 新規追加</button>
+    </div>
 
-Welcome to your new app.
+    @if (showForm)
+    {
+        <div class="memo-form card mb-3 p-3">
+            <h5>新しいメモ</h5>
+            <div class="mb-2">
+                <input class="form-control" @bind="newTitle" placeholder="タイトル" />
+            </div>
+            <div class="mb-2">
+                <textarea class="form-control" @bind="newContent" rows="4" placeholder="内容"></textarea>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-success" @onclick="AddMemo">保存</button>
+                <button class="btn btn-secondary" @onclick="ToggleForm">キャンセル</button>
+            </div>
+        </div>
+    }
+
+    @if (memos.Count == 0)
+    {
+        <p class="text-muted">メモがありません。「新規追加」から作成してください。</p>
+    }
+    else
+    {
+        <div class="memo-items">
+            @foreach (var memo in memos.OrderByDescending(m => m.CreatedAt))
+            {
+                <div class="card memo-card mb-2 p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="memo-title">@memo.Title</h5>
+                            <p class="memo-content text-muted">@memo.Content</p>
+                            <small class="text-secondary">@memo.CreatedAt.ToString("yyyy/MM/dd HH:mm")</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteMemo(memo)">削除</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Memo> memos = new();
+    private string newTitle = "";
+    private string newContent = "";
+    private bool showForm = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        memos = await Db.GetMemosAsync();
+    }
+
+    private void ToggleForm()
+    {
+        showForm = !showForm;
+        if (!showForm)
+        {
+            newTitle = "";
+            newContent = "";
+        }
+    }
+
+    private async Task AddMemo()
+    {
+        if (string.IsNullOrWhiteSpace(newTitle)) return;
+        var memo = new Memo { Title = newTitle, Content = newContent, CreatedAt = DateTime.Now };
+        await Db.SaveMemoAsync(memo);
+        memos = await Db.GetMemosAsync();
+        newTitle = "";
+        newContent = "";
+        showForm = false;
+    }
+
+    private async Task DeleteMemo(Memo memo)
+    {
+        await Db.DeleteMemoAsync(memo);
+        memos = await Db.GetMemosAsync();
+    }
+}
