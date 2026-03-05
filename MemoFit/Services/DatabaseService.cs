@@ -28,6 +28,12 @@ public class DatabaseService
         return await _db!.Table<Memo>().ToListAsync();
     }
 
+    public async Task<Memo?> GetMemoByIdAsync(int id)
+    {
+        await Init();
+        return await _db!.FindAsync<Memo>(id);
+    }
+
     public async Task<int> SaveMemoAsync(Memo memo)
     {
         await Init();

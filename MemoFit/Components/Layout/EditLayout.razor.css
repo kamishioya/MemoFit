@@ -1,0 +1,8 @@
+.edit-layout-root {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}

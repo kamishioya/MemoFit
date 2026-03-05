@@ -1,89 +1,230 @@
 ﻿@page "/"
 @using MemoFit.Models
-@inject MemoFit.Services.DatabaseService Db
+@using MemoFit.Services
+@inject DatabaseService Db
+@inject NavigationManager Nav
+@inject MenuStateService MenuState
+@implements IDisposable
 
 <div class="memo-list-page">
-    <div class="memo-header">
-        <h2>メモ一覧</h2>
-        <button class="btn btn-primary" @onclick="ToggleForm">＋ 新規追加</button>
-    </div>
-
-    @if (showForm)
+    @if (MenuState.SearchTerm.Length > 0)
     {
-        <div class="memo-form card mb-3 p-3">
-            <h5>新しいメモ</h5>
-            <div class="mb-2">
-                <input class="form-control" @bind="newTitle" placeholder="タイトル" />
-            </div>
-            <div class="mb-2">
-                <textarea class="form-control" @bind="newContent" rows="4" placeholder="内容"></textarea>
-            </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-success" @onclick="AddMemo">保存</button>
-                <button class="btn btn-secondary" @onclick="ToggleForm">キャンセル</button>
-            </div>
+        <div class="search-badge">
+            <span>「@MenuState.SearchTerm」で検索中</span>
+            <button class="search-clear-btn" @onclick="() => MenuState.SetSearchTerm(string.Empty)">✕</button>
         </div>
     }
 
-    @if (memos.Count == 0)
+    @if (FilteredMemos.Count == 0)
     {
-        <p class="text-muted">メモがありません。「新規追加」から作成してください。</p>
+        <div class="memo-empty">
+            @if (MenuState.SearchTerm.Length > 0)
+            {
+                <p class="text-muted">該当するメモが見つかりません。</p>
+            }
+            else
+            {
+                <p class="text-muted">メモがありません。＋ボタンから作成してください。</p>
+            }
+        </div>
     }
     else
     {
         <div class="memo-items">
-            @foreach (var memo in memos.OrderByDescending(m => m.CreatedAt))
+            @foreach (var memo in FilteredMemos)
             {
-                <div class="card memo-card mb-2 p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h5 class="memo-title">@memo.Title</h5>
-                            <p class="memo-content text-muted">@memo.Content</p>
-                            <small class="text-secondary">@memo.CreatedAt.ToString("yyyy/MM/dd HH:mm")</small>
-                        </div>
-                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteMemo(memo)">削除</button>
-                    </div>
+                var m = memo;
+                <div class="memo-row"
+                     @onclick="() => OnMemoClick(m)"
+                     @ontouchstart="() => StartLongPress(m)"
+                     @ontouchend="CancelLongPress"
+                     @ontouchmove="CancelLongPress"
+                     @oncontextmenu="() => ShowContextMenu(m)"
+                     @oncontextmenu:preventDefault>
+                    <span class="memo-row-title">@GetDisplayText(m)</span>
+                    <span class="memo-row-date">
+                        <span>@m.CreatedAt.ToString("yyyy/MM/dd")</span>
+                        <span>@m.CreatedAt.ToString("HH:mm")</span>
+                    </span>
                 </div>
             }
         </div>
     }
 </div>
 
+<button class="fab-button" @onclick="GoToNewMemo">＋</button>
+
+@* ─── コンテキストメニュー（ボトムシート） ─── *@
+@if (_contextMenuMemo != null)
+{
+    <div class="ctx-overlay" @onclick="CloseContextMenu"></div>
+    <div class="bottom-sheet" @onclick:stopPropagation>
+        <div class="bottom-sheet-handle"></div>
+        <p class="bottom-sheet-title">@GetDisplayText(_contextMenuMemo)</p>
+        <button class="sheet-btn" @onclick="CopyMemoContent">
+            <span class="sheet-btn-icon">⎘</span>本文をコピー
+        </button>
+        <button class="sheet-btn sheet-btn-danger" @onclick="ConfirmDelete">
+            <span class="sheet-btn-icon">✕</span>削除
+        </button>
+        <button class="sheet-btn sheet-btn-cancel" @onclick="CloseContextMenu">キャンセル</button>
+    </div>
+}
+
+@* ─── 削除確認ダイアログ ─── *@
+@if (_showDeleteConfirm)
+{
+    <div class="ctx-overlay ctx-overlay-top" @onclick="CancelDelete"></div>
+    <div class="confirm-dialog" @onclick:stopPropagation>
+        <p class="confirm-dialog-msg">このメモを削除しますか？</p>
+        <p class="confirm-dialog-sub">削除したメモは元に戻せません。</p>
+        <div class="confirm-dialog-actions">
+            <button class="confirm-btn confirm-btn-cancel" @onclick="CancelDelete">キャンセル</button>
+            <button class="confirm-btn confirm-btn-delete" @onclick="ExecuteDelete">削除する</button>
+        </div>
+    </div>
+}
+
 @code {
     private List<Memo> memos = new();
-    private string newTitle = "";
-    private string newContent = "";
-    private bool showForm = false;
+    private const int MaxDisplayLength = 40;
+
+    // ── 長押し検知 ──
+    private System.Timers.Timer? _longPressTimer;
+    private bool _longPressActive;
+
+    // ── コンテキストメニュー ──
+    private Memo? _contextMenuMemo;
+    private bool _showDeleteConfirm;
+
+    private List<Memo> FilteredMemos
+    {
+        get
+        {
+            var result = memos.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(MenuState.SearchTerm))
+            {
+                var term = MenuState.SearchTerm.Trim();
+                result = result.Where(m =>
+                    (m.Title ?? "").Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    (m.Content ?? "").Contains(term, StringComparison.OrdinalIgnoreCase));
+            }
+
+            result = MenuState.SortOrder switch
+            {
+                SortOrder.OldestFirst => result.OrderBy(m => m.CreatedAt),
+                SortOrder.TitleAsc    => result.OrderBy(m => m.Title ?? m.Content ?? ""),
+                _                     => result.OrderByDescending(m => m.CreatedAt),
+            };
+
+            return result.ToList();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
         memos = await Db.GetMemosAsync();
+        MenuState.OnChange += StateHasChanged;
     }
 
-    private void ToggleForm()
+    public void Dispose()
     {
-        showForm = !showForm;
-        if (!showForm)
+        MenuState.OnChange -= StateHasChanged;
+    }
+
+    private string GetDisplayText(Memo memo)
+    {
+        var text = !string.IsNullOrWhiteSpace(memo.Title) ? memo.Title : memo.Content ?? "";
+        if (text.Length > MaxDisplayLength)
+            return text[..MaxDisplayLength] + "...";
+        return text;
+    }
+
+    private void GoToNewMemo()
+    {
+        Nav.NavigateTo("/memo/new");
+    }
+
+    private void OpenMemo(Memo memo)
+    {
+        Nav.NavigateTo($"/memo/{memo.Id}");
+    }
+
+    // ── 長押し ──
+    private void StartLongPress(Memo memo)
+    {
+        _longPressTimer?.Stop();
+        _longPressTimer?.Dispose();
+        _longPressTimer = new System.Timers.Timer(500);
+        _longPressTimer.AutoReset = false;
+        _longPressTimer.Elapsed += (_, _) =>
         {
-            newTitle = "";
-            newContent = "";
+            _longPressActive = true;
+            InvokeAsync(() =>
+            {
+                ShowContextMenu(memo);
+                StateHasChanged();
+            });
+        };
+        _longPressTimer.Start();
+    }
+
+    private void CancelLongPress()
+    {
+        _longPressTimer?.Stop();
+        _longPressTimer?.Dispose();
+        _longPressTimer = null;
+    }
+
+    private void OnMemoClick(Memo memo)
+    {
+        if (_longPressActive)
+        {
+            _longPressActive = false;
+            return; // 長押し後のタップは無視
         }
+        OpenMemo(memo);
     }
 
-    private async Task AddMemo()
+    // ── コンテキストメニュー ──
+    private void ShowContextMenu(Memo memo)
     {
-        if (string.IsNullOrWhiteSpace(newTitle)) return;
-        var memo = new Memo { Title = newTitle, Content = newContent, CreatedAt = DateTime.Now };
-        await Db.SaveMemoAsync(memo);
-        memos = await Db.GetMemosAsync();
-        newTitle = "";
-        newContent = "";
-        showForm = false;
+        CancelLongPress();
+        _contextMenuMemo = memo;
+        _showDeleteConfirm = false;
     }
 
-    private async Task DeleteMemo(Memo memo)
+    private void CloseContextMenu()
     {
-        await Db.DeleteMemoAsync(memo);
+        _contextMenuMemo = null;
+        _showDeleteConfirm = false;
+    }
+
+    private async Task CopyMemoContent()
+    {
+        if (_contextMenuMemo == null) return;
+        var text = _contextMenuMemo.Content ?? _contextMenuMemo.Title ?? "";
+        await Clipboard.SetTextAsync(text);
+        CloseContextMenu();
+    }
+
+    // ── 削除 ──
+    private void ConfirmDelete()
+    {
+        _showDeleteConfirm = true;
+    }
+
+    private void CancelDelete()
+    {
+        _showDeleteConfirm = false;
+    }
+
+    private async Task ExecuteDelete()
+    {
+        if (_contextMenuMemo == null) return;
+        await Db.DeleteMemoAsync(_contextMenuMemo);
         memos = await Db.GetMemosAsync();
+        CloseContextMenu();
     }
 }

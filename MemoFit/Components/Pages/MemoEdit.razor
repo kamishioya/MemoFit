@@ -1,0 +1,75 @@
+@page "/memo/new"
+@page "/memo/{Id:int}"
+@layout MemoFit.Components.Layout.EditLayout
+@using MemoFit.Models
+@inject MemoFit.Services.DatabaseService Db
+@inject NavigationManager Nav
+
+<div class="memo-edit-page">
+    <div class="memo-top-bar">
+        <button class="edit-back-btn" @onclick="Cancel">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
+            </svg>
+        </button>
+        <input class="edit-title-input"
+               @bind="newTitle"
+               @bind:event="oninput"
+               placeholder="タイトル" />
+        <span class="edit-char-count">@newContent.Length</span>
+        <button class="edit-save-btn" @onclick="Save">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+            </svg>
+        </button>
+    </div>
+
+    <textarea class="edit-body-textarea"
+              @bind="newContent"
+              @bind:event="oninput"
+              placeholder="メモを入力してください"></textarea>
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Memo? _editingMemo;
+    private string newTitle = "";
+    private string newContent = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id != 0)
+        {
+            _editingMemo = await Db.GetMemoByIdAsync(Id);
+            if (_editingMemo != null)
+            {
+                newTitle = _editingMemo.Title ?? "";
+                newContent = _editingMemo.Content ?? "";
+
+                // 最後に読んだ日を更新
+                _editingMemo.LastReadAt = DateTime.Now;
+                await Db.SaveMemoAsync(_editingMemo);
+            }
+        }
+    }
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(newTitle) && string.IsNullOrWhiteSpace(newContent))
+            return;
+
+        var memo = _editingMemo ?? new Memo { CreatedAt = DateTime.Now };
+        memo.Title = newTitle;
+        memo.Content = newContent;
+        memo.UpdatedAt = DateTime.Now;
+
+        await Db.SaveMemoAsync(memo);
+        Nav.NavigateTo("/");
+    }
+
+    private void Cancel()
+    {
+        Nav.NavigateTo("/");
+    }
+}

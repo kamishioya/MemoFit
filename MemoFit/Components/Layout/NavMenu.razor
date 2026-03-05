@@ -1,17 +1,60 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
+﻿@inject MemoFit.Services.MenuStateService MenuState
+@implements IDisposable
+
+<div class="top-row ps-3 navbar">
+    <div class="container-fluid d-flex align-items-center justify-content-between">
         <a class="navbar-brand" href="">MemoFit</a>
+        <button class="menu-icon-btn" @onclick="MenuState.OpenMenu" aria-label="メニューを開く">
+            <span class="menu-icon-bar"></span>
+            <span class="menu-icon-bar"></span>
+            <span class="menu-icon-bar"></span>
+        </button>
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+@if (MenuState.IsMenuOpen)
+{
+    <div class="menu-overlay" @onclick="MenuState.CloseMenu">
+        <div class="menu-panel" @onclick:stopPropagation="true">
+            <div class="menu-panel-header">
+                <span class="menu-panel-title">メニュー</span>
+                <button class="menu-close-btn" @onclick="MenuState.CloseMenu">✕</button>
+            </div>
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-journal-text-nav-menu" aria-hidden="true"></span> メモ一覧
-            </NavLink>
+            <div class="menu-section">
+                <label class="menu-label">検索</label>
+                <input type="text"
+                       class="menu-search-input"
+                       placeholder="キーワードで検索..."
+                       value="@MenuState.SearchTerm"
+                       @oninput="e => MenuState.SetSearchTerm(e.Value?.ToString() ?? string.Empty)" />
+            </div>
+
+            <div class="menu-section">
+                <label class="menu-label">並び順</label>
+                <div class="sort-options">
+                    <button class="sort-btn @(MenuState.SortOrder == MemoFit.Services.SortOrder.NewestFirst ? "active" : "")"
+                            @onclick="() => MenuState.SetSortOrder(MemoFit.Services.SortOrder.NewestFirst)">新しい順</button>
+                    <button class="sort-btn @(MenuState.SortOrder == MemoFit.Services.SortOrder.OldestFirst ? "active" : "")"
+                            @onclick="() => MenuState.SetSortOrder(MemoFit.Services.SortOrder.OldestFirst)">古い順</button>
+                    <button class="sort-btn @(MenuState.SortOrder == MemoFit.Services.SortOrder.TitleAsc ? "active" : "")"
+                            @onclick="() => MenuState.SetSortOrder(MemoFit.Services.SortOrder.TitleAsc)">タイトル順</button>
+                </div>
+            </div>
+
+            <button class="menu-apply-btn" @onclick="MenuState.CloseMenu">閉じる</button>
         </div>
-    </nav>
-</div>
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        MenuState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        MenuState.OnChange -= StateHasChanged;
+    }
+}

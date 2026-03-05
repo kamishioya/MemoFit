@@ -1,0 +1,76 @@
+.memo-edit-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background: #fff;
+}
+
+.memo-top-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    padding-top: calc(0.6rem + var(--safe-area-top, env(safe-area-inset-top, 0px)));
+    background: #fff;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.edit-back-btn {
+    background: none;
+    border: none;
+    font-size: 0;
+    color: #1b6ec2;
+    padding: 0 0.25rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.edit-title-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    background: transparent;
+    min-width: 0;
+}
+
+.edit-title-input::placeholder {
+    color: #adb5bd;
+}
+
+.edit-char-count {
+    font-size: 0.85rem;
+    color: #adb5bd;
+    flex-shrink: 0;
+}
+
+.edit-save-btn {
+    background: none;
+    border: none;
+    font-size: 0;
+    color: #1b6ec2;
+    padding: 0 0.25rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.edit-body-textarea {
+    flex: 1;
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    line-height: 1.6;
+}
+
+.edit-body-textarea::placeholder {
+    color: #adb5bd;
+}

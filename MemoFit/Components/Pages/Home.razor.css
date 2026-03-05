@@ -1,38 +1,268 @@
 .memo-list-page {
-    max-width: 640px;
-    margin: 0 auto;
-}
-
-.memo-header {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.memo-empty {
+    flex: 1;
+    display: flex;
     align-items: center;
-    margin-bottom: 1rem;
+    justify-content: center;
 }
 
-.memo-header h2 {
-    margin: 0;
+.memo-items {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 5rem;
 }
 
-.memo-card {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
+.memo-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid #e9ecef;
+    cursor: pointer;
+    gap: 0.75rem;
 }
 
-.memo-title {
+.memo-row:active {
+    background-color: #f0f4ff;
+}
+
+.memo-row-title {
+    flex: 1;
     font-size: 1rem;
-    font-weight: bold;
-    margin-bottom: 0.25rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
-.memo-content {
-    font-size: 0.9rem;
-    white-space: pre-wrap;
-    margin-bottom: 0.25rem;
+.memo-row-date {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 0.8rem;
+    color: #6c757d;
+    white-space: nowrap;
 }
 
-.memo-form {
-    border: 1px solid #dee2e6;
+.fab-button {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background-color: #1b6ec2;
+    color: #fff;
+    font-size: 1.8rem;
+    line-height: 1;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.fab-button:active {
+    background-color: #1861ac;
+    transform: scale(0.95);
+}
+
+/* ── 検索中バッジ ── */
+.search-badge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #eaf3ff;
+    border: 1px solid #c2d9f8;
     border-radius: 8px;
-    background-color: #f8f9fa;
+    padding: 0.4rem 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.88rem;
+    color: #2271d1;
+}
+
+.search-clear-btn {
+    background: none;
+    border: none;
+    color: #2271d1;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 0.25rem;
+    line-height: 1;
+}
+
+/* ── コンテキストメニュー オーバーレイ ── */
+.ctx-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1100;
+    animation: fadeIn 0.15s ease;
+}
+
+.ctx-overlay-top {
+    z-index: 1300;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ── ボトムシート ── */
+.bottom-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-radius: 1rem 1rem 0 0;
+    padding: 0.5rem 1rem 2rem;
+    z-index: 1200;
+    animation: slideUp 0.2s ease;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+
+.bottom-sheet-handle {
+    width: 2.5rem;
+    height: 4px;
+    background: #dee2e6;
+    border-radius: 2px;
+    margin: 0.4rem auto 0.8rem;
+}
+
+.bottom-sheet-title {
+    font-size: 0.85rem;
+    color: #6c757d;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 0.5rem;
+}
+
+.sheet-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background: none;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    color: #212529;
+}
+
+.sheet-btn:active {
+    background: #f0f4ff;
+}
+
+.sheet-btn-icon {
+    font-size: 1rem;
+    width: 1.6rem;
+    text-align: center;
+    color: inherit;
+    font-style: normal;
+    line-height: 1;
+}
+
+.sheet-btn-danger {
+    color: #dc3545;
+}
+
+.sheet-btn-cancel {
+    justify-content: center;
+    color: #6c757d;
+    margin-top: 0.25rem;
+    border-top: 1px solid #e9ecef;
+    padding-top: 1rem;
+}
+
+/* ── 削除確認ダイアログ ── */
+.confirm-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 0.75rem;
+    padding: 1.5rem 1.25rem 1.25rem;
+    z-index: 1400;
+    width: min(320px, 90vw);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    animation: popIn 0.15s ease;
+}
+
+@keyframes popIn {
+    from { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+    to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.confirm-dialog-msg {
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 0.4rem;
+}
+
+.confirm-dialog-sub {
+    font-size: 0.85rem;
+    color: #6c757d;
+    text-align: center;
+    margin-bottom: 1.25rem;
+}
+
+.confirm-dialog-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.confirm-btn {
+    flex: 1;
+    padding: 0.7rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.confirm-btn-cancel {
+    background: #f1f3f5;
+    color: #495057;
+}
+
+.confirm-btn-cancel:active {
+    background: #e9ecef;
+}
+
+.confirm-btn-delete {
+    background: #dc3545;
+    color: #fff;
+}
+
+.confirm-btn-delete:active {
+    background: #bb2d3b;
 }

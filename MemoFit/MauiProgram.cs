@@ -18,6 +18,7 @@ namespace MemoFit
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddSingleton<DatabaseService>();
             builder.Services.AddSingleton<SafeAreaService>();
+            builder.Services.AddSingleton<MenuStateService>();
 
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();

@@ -1,20 +1,4 @@
-.navbar-toggler {
-    appearance: none;
-    cursor: pointer;
-    width: 3.5rem;
-    height: 2.5rem;
-    color: #333;
-    position: absolute;
-    top: calc(var(--safe-area-top, 0px) + 0.5rem);
-    right: 1rem;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%280, 0, 0, 0.6%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") no-repeat center/1.75rem rgba(0, 0, 0, 0.05);
-}
-
-.navbar-toggler:checked {
-    background-color: rgba(0, 0, 0, 0.1);
-}
-
+/* ── ヘッダー ── */
 .top-row {
     min-height: 3.5rem;
     background-color: #ffffff;
@@ -22,7 +6,167 @@
 
 .navbar-brand {
     font-size: 1.1rem;
+    font-weight: 700;
     color: #333 !important;
+}
+
+/* ── ハンバーガーボタン ── */
+.menu-icon-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    padding: 6px 8px;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.menu-icon-btn:active {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.menu-icon-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background-color: #333;
+    border-radius: 2px;
+}
+
+/* ── モーダルオーバーレイ ── */
+.menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 9000;
+    display: flex;
+    align-items: flex-end;
+    animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ── ボトムシートパネル ── */
+.menu-panel {
+    background: #fff;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    padding: 1.25rem 1.5rem 2rem;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+
+.menu-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.menu-panel-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #222;
+}
+
+.menu-close-btn {
+    background: #f0f0f0;
+    border: none;
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── セクション ── */
+.menu-section {
+    margin-bottom: 1.25rem;
+}
+
+.menu-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.6rem;
+}
+
+/* ── 検索ボックス ── */
+.menu-search-input {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.95rem;
+    border: 1.5px solid #ddd;
+    border-radius: 10px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.menu-search-input:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+}
+
+/* ── 並び順ボタン ── */
+.sort-options {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.sort-btn {
+    flex: 1;
+    padding: 0.55rem 0;
+    font-size: 0.9rem;
+    background: #f4f4f4;
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.15s;
+}
+
+.sort-btn.active {
+    background: #eaf3ff;
+    border-color: #4a90e2;
+    color: #2271d1;
+    font-weight: 600;
+}
+
+/* ── 閉じるボタン ── */
+.menu-apply-btn {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    background: #333;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
 }
 
 .bi {
