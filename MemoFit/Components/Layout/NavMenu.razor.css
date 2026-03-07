@@ -113,22 +113,6 @@
     margin-bottom: 0.6rem;
 }
 
-/* ── 検索ボックス ── */
-.menu-search-input {
-    width: 100%;
-    padding: 0.65rem 0.85rem;
-    font-size: 0.95rem;
-    border: 1.5px solid #ddd;
-    border-radius: 10px;
-    outline: none;
-    box-sizing: border-box;
-}
-
-.menu-search-input:focus {
-    border-color: #4a90e2;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
-}
-
 /* ── 並び順ボタン ── */
 .sort-options {
     display: flex;

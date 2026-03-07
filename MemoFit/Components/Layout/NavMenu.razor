@@ -22,15 +22,6 @@
             </div>
 
             <div class="menu-section">
-                <label class="menu-label">検索</label>
-                <input type="text"
-                       class="menu-search-input"
-                       placeholder="キーワードで検索..."
-                       value="@MenuState.SearchTerm"
-                       @oninput="e => MenuState.SetSearchTerm(e.Value?.ToString() ?? string.Empty)" />
-            </div>
-
-            <div class="menu-section">
                 <label class="menu-label">並び順</label>
                 <div class="sort-options">
                     <button class="sort-btn @(MenuState.SortOrder == MemoFit.Services.SortOrder.NewestFirst ? "active" : "")"

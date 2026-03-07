@@ -1,33 +1,96 @@
 .memo-list-page {
-    display: flex;
-    flex-direction: column;
     height: 100%;
+    min-height: 0;
     width: 100%;
-    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    background: #fff;
     position: relative;
 }
 
-.memo-empty {
-    flex: 1;
+.memo-toolbar {
+    padding: 0.45rem 1rem 0.55rem;
+    background: #fff;
+}
+
+.memo-search-box {
+    position: relative;
+    width: 100%;
+}
+
+.memo-search-input {
+    display: block;
+    width: 100%;
+    min-height: 2.85rem;
+    padding: 0.5rem 2.45rem 0.5rem 0.9rem;
+    font-size: 0.9rem;
+    border: 1.5px solid #d8dee6;
+    border-radius: 1.35rem;
+    background: #fff;
+    outline: none;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.memo-search-input:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+}
+
+.memo-search-clear-btn {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    transform: translateY(-50%);
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 1.55rem;
+    height: 1.55rem;
+    border: none;
+    border-radius: 50%;
+    background: #eef2f6;
+    color: #5c6b7a;
+    font-size: 0.82rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.memo-content {
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 0 1rem calc(6rem + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+}
+
+.memo-empty {
+    display: flex;
+    min-height: 100%;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0 calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
 }
 
 .memo-items {
-    flex: 1;
-    overflow-y: auto;
-    padding-bottom: 5rem;
+    overflow: visible;
 }
 
 .memo-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.65rem 1rem;
+    min-height: 2.25rem;
+    padding: clamp(0.18rem, 0.45vh, 0.32rem) 0.2rem;
     border-bottom: 1px solid #e9ecef;
     cursor: pointer;
-    gap: 0.75rem;
+    gap: 0.4rem;
+    touch-action: pan-y;
+    box-sizing: border-box;
 }
 
 .memo-row:active {
@@ -36,8 +99,9 @@
 
 .memo-row-title {
     flex: 1;
-    font-size: 1rem;
+    font-size: clamp(0.84rem, 2.35vw, 0.96rem);
     font-weight: 500;
+    line-height: 1.15;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -47,17 +111,53 @@
 .memo-row-date {
     flex-shrink: 0;
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    font-size: 0.8rem;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: clamp(0.64rem, 1.75vw, 0.72rem);
+    line-height: 1;
     color: #6c757d;
     white-space: nowrap;
 }
 
+@media (max-width: 640.98px) {
+    .memo-toolbar {
+        padding-top: 0.35rem;
+        padding-bottom: 0.45rem;
+    }
+
+    .memo-search-input {
+        min-height: 2.65rem;
+        padding-top: 0.42rem;
+        padding-bottom: 0.42rem;
+        font-size: 0.88rem;
+    }
+
+    .memo-row {
+        min-height: 2.05rem;
+        padding-top: 0.16rem;
+        padding-bottom: 0.16rem;
+    }
+
+    .memo-row-title {
+        font-size: 0.82rem;
+    }
+
+    .memo-row-date {
+        font-size: 0.66rem;
+    }
+
+    .memo-content {
+        padding-left: 1rem;
+        padding-right: 1rem;
+        padding-bottom: calc(6.2rem + env(safe-area-inset-bottom, 0px));
+    }
+}
+
 .fab-button {
     position: fixed;
-    bottom: 2rem;
-    right: 2rem;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    right: 1.5rem;
     width: 3.5rem;
     height: 3.5rem;
     border-radius: 50%;
@@ -77,30 +177,6 @@
 .fab-button:active {
     background-color: #1861ac;
     transform: scale(0.95);
-}
-
-/* ── 検索中バッジ ── */
-.search-badge {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #eaf3ff;
-    border: 1px solid #c2d9f8;
-    border-radius: 8px;
-    padding: 0.4rem 0.75rem;
-    margin-bottom: 0.75rem;
-    font-size: 0.88rem;
-    color: #2271d1;
-}
-
-.search-clear-btn {
-    background: none;
-    border: none;
-    color: #2271d1;
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0 0.25rem;
-    line-height: 1;
 }
 
 /* ── コンテキストメニュー オーバーレイ ── */

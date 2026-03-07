@@ -1,55 +1,67 @@
 ﻿@page "/"
+@layout MemoFit.Components.Layout.ListLayout
 @using MemoFit.Models
 @using MemoFit.Services
 @inject DatabaseService Db
 @inject NavigationManager Nav
 @inject MenuStateService MenuState
+@inject IJSRuntime JS
 @implements IDisposable
 
 <div class="memo-list-page">
-    @if (MenuState.SearchTerm.Length > 0)
-    {
-        <div class="search-badge">
-            <span>「@MenuState.SearchTerm」で検索中</span>
-            <button class="search-clear-btn" @onclick="() => MenuState.SetSearchTerm(string.Empty)">✕</button>
-        </div>
-    }
+    <div class="memo-toolbar">
+        <div class="memo-search-box">
+            <input type="text"
+                   class="memo-search-input"
+                   placeholder="キーワードで検索..."
+                   value="@MenuState.SearchTerm"
+                   @oninput="e => MenuState.SetSearchTerm(e.Value?.ToString() ?? string.Empty)" />
 
-    @if (FilteredMemos.Count == 0)
-    {
-        <div class="memo-empty">
             @if (MenuState.SearchTerm.Length > 0)
             {
-                <p class="text-muted">該当するメモが見つかりません。</p>
-            }
-            else
-            {
-                <p class="text-muted">メモがありません。＋ボタンから作成してください。</p>
-            }
-        </div>
-    }
-    else
-    {
-        <div class="memo-items">
-            @foreach (var memo in FilteredMemos)
-            {
-                var m = memo;
-                <div class="memo-row"
-                     @onclick="() => OnMemoClick(m)"
-                     @ontouchstart="() => StartLongPress(m)"
-                     @ontouchend="CancelLongPress"
-                     @ontouchmove="CancelLongPress"
-                     @oncontextmenu="() => ShowContextMenu(m)"
-                     @oncontextmenu:preventDefault>
-                    <span class="memo-row-title">@GetDisplayText(m)</span>
-                    <span class="memo-row-date">
-                        <span>@m.CreatedAt.ToString("yyyy/MM/dd")</span>
-                        <span>@m.CreatedAt.ToString("HH:mm")</span>
-                    </span>
-                </div>
+                <button type="button"
+                        class="memo-search-clear-btn"
+                        @onclick="() => MenuState.SetSearchTerm(string.Empty)"
+                        aria-label="検索語をクリア">✕</button>
             }
         </div>
-    }
+    </div>
+
+    <div class="memo-content">
+        @if (FilteredMemos.Count == 0)
+        {
+            <div class="memo-empty">
+                @if (MenuState.SearchTerm.Length > 0)
+                {
+                    <p class="text-muted">該当するメモが見つかりません。</p>
+                }
+                else
+                {
+                    <p class="text-muted">メモがありません。＋ボタンから作成してください。</p>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="memo-items" @ref="_memoItemsRef">
+                @foreach (var memo in FilteredMemos)
+                {
+                    var m = memo;
+                    <div class="memo-row"
+                         data-memo-id="@m.Id"
+                         @onclick="() => OnMemoClick(m)"
+                         @oncontextmenu="() => ShowContextMenu(m)"
+                         @oncontextmenu:preventDefault>
+                        <span class="memo-row-title">@GetDisplayText(m)</span>
+                        <span class="memo-row-date">
+                            <span>@m.CreatedAt.ToString("yyyy/MM/dd")</span>
+                            <span>@m.CreatedAt.ToString("HH:mm")</span>
+                        </span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
 </div>
 
 <button class="fab-button" @onclick="GoToNewMemo">＋</button>
@@ -90,8 +102,9 @@
     private const int MaxDisplayLength = 40;
 
     // ── 長押し検知 ──
-    private System.Timers.Timer? _longPressTimer;
     private bool _longPressActive;
+    private ElementReference _memoItemsRef;
+    private DotNetObjectReference<Home>? _dotNetRef;
 
     // ── コンテキストメニュー ──
     private Memo? _contextMenuMemo;
@@ -128,9 +141,21 @@
         MenuState.OnChange += StateHasChanged;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (FilteredMemos.Count == 0)
+        {
+            return;
+        }
+
+        _dotNetRef ??= DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("memoLongPress.initialize", _memoItemsRef, _dotNetRef);
+    }
+
     public void Dispose()
     {
         MenuState.OnChange -= StateHasChanged;
+        _dotNetRef?.Dispose();
     }
 
     private string GetDisplayText(Memo memo)
@@ -152,29 +177,18 @@
     }
 
     // ── 長押し ──
-    private void StartLongPress(Memo memo)
+    [JSInvokable]
+    public void OnMemoLongPress(int memoId)
     {
-        _longPressTimer?.Stop();
-        _longPressTimer?.Dispose();
-        _longPressTimer = new System.Timers.Timer(500);
-        _longPressTimer.AutoReset = false;
-        _longPressTimer.Elapsed += (_, _) =>
+        var memo = memos.FirstOrDefault(m => m.Id == memoId);
+        if (memo == null)
         {
-            _longPressActive = true;
-            InvokeAsync(() =>
-            {
-                ShowContextMenu(memo);
-                StateHasChanged();
-            });
-        };
-        _longPressTimer.Start();
-    }
+            return;
+        }
 
-    private void CancelLongPress()
-    {
-        _longPressTimer?.Stop();
-        _longPressTimer?.Dispose();
-        _longPressTimer = null;
+        _longPressActive = true;
+        ShowContextMenu(memo);
+        InvokeAsync(StateHasChanged);
     }
 
     private void OnMemoClick(Memo memo)
@@ -190,7 +204,6 @@
     // ── コンテキストメニュー ──
     private void ShowContextMenu(Memo memo)
     {
-        CancelLongPress();
         _contextMenuMemo = memo;
         _showDeleteConfirm = false;
     }

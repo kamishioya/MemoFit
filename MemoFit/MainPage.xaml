@@ -5,7 +5,10 @@
              xmlns:components="clr-namespace:MemoFit.Components"
              x:Class="MemoFit.MainPage">
 
-    <BlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html">
+    <BlazorWebView x:Name="blazorWebView"
+                   HostPage="wwwroot/index.html"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="Fill">
         <BlazorWebView.RootComponents>
             <RootComponent Selector="#app" ComponentType="{x:Type components:Routes}" />
         </BlazorWebView.RootComponents>
